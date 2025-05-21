@@ -47,3 +47,6 @@ echo "psql -h localhost -U postgres -d demo -c 'SELECT * FROM mart_customer_summ
 EOF
 
 chmod +x run_demo.sh
+
+
+echo "host    all             all             0.0.0.0/0               trust" >> /var/lib/postgresql/data/pg_hba.conf
