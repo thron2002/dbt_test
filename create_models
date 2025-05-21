@@ -1,0 +1,171 @@
+# Create directories for dbt models
+mkdir -p models/{staging,intermediate,marts}
+
+# Create staging models - these are the initial transformations
+cat > models/staging/stg_customers.sql << 'EOF'
+with source as (
+    select * from raw_customers
+),
+
+renamed as (
+    select
+        id as customer_id,
+        first_name,
+        last_name,
+        email,
+        signup_date,
+        last_purchase_date,
+        total_purchases,
+        days_since_last_purchase
+    from source
+)
+
+select * from renamed
+EOF
+
+cat > models/staging/stg_orders.sql << 'EOF'
+with source as (
+    select * from raw_orders
+),
+
+renamed as (
+    select
+        id as order_id,
+        customer_id,
+        order_date,
+        amount,
+        status
+    from source
+)
+
+select * from renamed
+EOF
+
+cat > models/staging/stg_products.sql << 'EOF'
+with source as (
+    select * from raw_products
+),
+
+renamed as (
+    select
+        id as product_id,
+        name as product_name,
+        category,
+        price,
+        in_stock
+    from source
+)
+
+select * from renamed
+EOF
+
+# Create intermediate models - these combine staging models
+cat > models/intermediate/int_customer_orders.sql << 'EOF'
+with customers as (
+    select * from {{ ref('stg_customers') }}
+),
+
+orders as (
+    select * from {{ ref('stg_orders') }}
+),
+
+customer_orders as (
+    select
+        c.customer_id,
+        c.first_name,
+        c.last_name,
+        c.email,
+        c.signup_date,
+        count(o.order_id) as order_count,
+        sum(o.amount) as total_amount
+    from customers c
+    left join orders o on c.customer_id = o.customer_id
+    group by 1, 2, 3, 4, 5
+)
+
+select * from customer_orders
+EOF
+
+# Create mart models - these are the final models for consumption
+cat > models/marts/mart_customer_summary.sql << 'EOF'
+with customer_orders as (
+    select * from {{ ref('int_customer_orders') }}
+),
+
+customer_summary as (
+    select
+        customer_id,
+        first_name || ' ' || last_name as customer_name,
+        email,
+        signup_date,
+        order_count,
+        total_amount,
+        case
+            when order_count = 0 then 'No orders'
+            when order_count between 1 and 2 then 'Low'
+            when order_count between 3 and 5 then 'Medium'
+            else 'High'
+        end as customer_activity
+    from customer_orders
+)
+
+select * from customer_summary
+EOF
+
+# Create schema.yml for documentation and tests
+cat > models/schema.yml << 'EOF'
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Staged customer data"
+    columns:
+      - name: customer_id
+        description: "The primary key for customers"
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_orders
+    description: "Staged order data"
+    columns:
+      - name: order_id
+        description: "The primary key for orders"
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "The foreign key to customers"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+
+  - name: stg_products
+    description: "Staged product data"
+    columns:
+      - name: product_id
+        description: "The primary key for products"
+        tests:
+          - unique
+          - not_null
+
+  - name: int_customer_orders
+    description: "Intermediate model combining customers and their orders"
+    columns:
+      - name: customer_id
+        description: "The primary key for customers"
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_customer_summary
+    description: "Final customer summary for analysis"
+    columns:
+      - name: customer_id
+        description: "The primary key for customers"
+        tests:
+          - unique
+          - not_null
+EOF
