@@ -1,0 +1,44 @@
+cat > scripts/upload_to_minio.py << 'EOF'
+from minio import Minio
+import os
+
+# Minio connection details
+MINIO_ENDPOINT = "localhost:9000"
+MINIO_ACCESS_KEY = "minioadmin"
+MINIO_SECRET_KEY = "minioadmin"
+BUCKET_NAME = "raw-data"
+
+# Initialize Minio client
+minio_client = Minio(
+    MINIO_ENDPOINT,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=False
+)
+
+# Create bucket if it doesn't exist
+if not minio_client.bucket_exists(BUCKET_NAME):
+    minio_client.make_bucket(BUCKET_NAME)
+    print(f"Bucket '{BUCKET_NAME}' created successfully")
+
+# Directory containing the CSV files
+data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "raw")
+
+# Upload each CSV file to Minio
+for filename in os.listdir(data_dir):
+    if filename.endswith('.csv'):
+        file_path = os.path.join(data_dir, filename)
+        
+        # Upload the file
+        minio_client.fput_object(
+            BUCKET_NAME, 
+            filename, 
+            file_path
+        )
+        print(f"Uploaded '{filename}' to Minio bucket '{BUCKET_NAME}'")
+
+print("All files uploaded successfully!")
+EOF
+
+# Execute the script
+python scripts/upload_to_minio.py
