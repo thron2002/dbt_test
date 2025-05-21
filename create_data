@@ -1,0 +1,47 @@
+mkdir -p data/raw
+cat > data/raw/customers.csv << 'EOF'
+id,first_name,last_name,email,signup_date,last_purchase_date,total_purchases
+1,John,Doe,john.doe@example.com,2022-01-01,2023-06-15,25
+2,Jane,Smith,jane.smith@example.com,2022-02-15,2023-05-20,18
+3,Bob,Johnson,bob.johnson@example.com,2022-03-10,2023-06-10,12
+4,Alice,Williams,alice.williams@example.com,2022-04-05,2023-06-01,30
+5,Charlie,Brown,charlie.brown@example.com,2022-05-20,2023-04-15,8
+6,Eva,Davis,eva.davis@example.com,2022-06-12,2023-06-18,22
+7,Frank,Miller,frank.miller@example.com,2022-07-08,2023-05-12,15
+8,Grace,Wilson,grace.wilson@example.com,2022-08-22,2023-06-05,27
+9,Henry,Moore,henry.moore@example.com,2022-09-14,2023-03-10,5
+10,Ivy,Taylor,ivy.taylor@example.com,2022-10-30,2023-06-20,19
+EOF
+
+cat > data/raw/orders.csv << 'EOF'
+id,customer_id,order_date,amount,status
+101,1,2023-06-15,120.50,completed
+102,2,2023-05-20,85.25,completed
+103,3,2023-06-10,45.80,completed
+104,4,2023-06-01,200.10,completed
+105,5,2023-04-15,35.99,completed
+106,6,2023-06-18,150.75,completed
+107,7,2023-05-12,65.30,completed
+108,8,2023-06-05,175.20,completed
+109,9,2023-03-10,25.50,completed
+110,10,2023-06-20,95.40,completed
+111,1,2023-05-10,50.25,completed
+112,1,2023-04-05,75.80,completed
+113,2,2023-04-18,60.50,completed
+114,3,2023-05-22,30.20,completed
+115,4,2023-05-15,110.75,completed
+EOF
+
+cat > data/raw/products.csv << 'EOF'
+id,name,category,price,in_stock
+1001,Laptop,Electronics,1200.00,true
+1002,Smartphone,Electronics,800.50,true
+1003,Headphones,Electronics,150.75,true
+1004,Coffee Maker,Home,65.30,true
+1005,Blender,Home,45.99,false
+1006,Desk Lamp,Home,35.25,true
+1007,Gaming Mouse,Electronics,80.00,true
+1008,Bluetooth Speaker,Electronics,120.50,true
+1009,Toaster,Home,55.75,false
+1010,Electric Kettle,Home,40.20,true
+EOF
